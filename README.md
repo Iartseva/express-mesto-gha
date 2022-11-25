@@ -1,6 +1,8 @@
 [![Tests](../../actions/workflows/tests-13-sprint.yml/badge.svg)](../../actions/workflows/tests-13-sprint.yml) [![Tests](../../actions/workflows/tests-14-sprint.yml/badge.svg)](../../actions/workflows/tests-14-sprint.yml)
 # Проект Mesto фронтенд + бэкенд
+ПР13. Развернут сервер приложения и база данных, настроены модели данных для пользователей и карточек. Настроены контроллеры и роуты. Проект планируется развивать: подключать фронт-энд часть, реализовать авторизацию. 
 
+* [Ссылка на репозиторий проекта](https://github.com/Iartseva/express-mesto-gha)
 
 ## Директории
 
