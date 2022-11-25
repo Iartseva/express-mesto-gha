@@ -16,6 +16,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
+app.use('*', (req, res) => {
+  res.status(404).send({
+    message: 'Такой страницы не существует',
+  });
+});
 
 mongoose.connect('mongodb://127.0.0.1/mestodb')
 .then(app.listen(PORT, () => {
