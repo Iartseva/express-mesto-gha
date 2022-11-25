@@ -1,5 +1,5 @@
 const Card = require("../models/card");
-const {setError} = require("../utils/utils");
+const { setError, NotFound } = require("../utils/utils");
 
 module.exports.getAllCards = (req, res) => {
   Card.find({})
@@ -20,6 +20,9 @@ module.exports.createCard = (req, res) => {
 module.exports.deleteCard = (req, res) => {
   const { cardId } = req.params;
   Card.findByIdAndRemove(cardId)
+    .orFail(() => {
+      throw new NotFound("Карта с данным ID не найдена");
+    })
     .then((card) => res.send({ card }))
     .catch((err) => setError(res, err));
 };
@@ -30,6 +33,9 @@ module.exports.likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true }
   )
+    .orFail(() => {
+      throw new NotFound("Карта с данным ID не найдена");
+    })
     .then((card) => res.send({ card }))
     .catch((err) => setError(res, err));
 };
@@ -40,6 +46,9 @@ module.exports.dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true }
   )
-  .then((card) => res.send({ card }))
-  .catch((err) => setError(res, err));
+    .orFail(() => {
+      throw new NotFound("Карта с данным ID не найдена");
+    })
+    .then((card) => res.send({ card }))
+    .catch((err) => setError(res, err));
 };
