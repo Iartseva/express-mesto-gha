@@ -19,4 +19,6 @@ const setError = (res, err) => {
   return res.status(errorServer).send({ message: `${err.message}` });
 };
 
-module.exports = {setError, NotFound}
+module.exports = {
+  setError, NotFound,
+};
