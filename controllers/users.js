@@ -1,15 +1,21 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { setError, NotFound } = require('../middlewares/errors');
+const {
+  EmailError,
+  NotFound,
+  UnauthorizedError,
+  ValidationError,
+  ServerError,
+} = require('../errors/allErrors');
 
-module.exports.getAllUsers = (req, res) => {
+module.exports.getAllUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => setError(res, err));
+    .catch(next);
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail(() => {
       throw new NotFound('Такого пользователя не существует');
@@ -20,10 +26,16 @@ module.exports.getUserById = (req, res) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => setError(res, err));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Введеный id не существует'));
+      } else {
+        next(new ServerError('Ошибка сервера'));
+      }
+    });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -39,10 +51,18 @@ module.exports.createUser = (req, res) => {
       _id: user._id,
       email: user.email,
     }))
-    .catch((err) => setError(res, err));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Введены неверные данные'));
+      } else if (err.code === 11000) {
+        next(new EmailError('Пользователь с таким e-mail уже зарегистрирован'));
+      } else {
+        next(new ServerError('Ошибка сервера'));
+      }
+    });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -50,11 +70,7 @@ module.exports.login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next(new UnauthorizedError('Введен неверный пароль или e-mail')));
 };
 
 module.exports.getUserInfo = (req, res, next) => {
@@ -71,7 +87,7 @@ module.exports.getUserInfo = (req, res, next) => {
     .catch(next);
 };
 
-module.exports.updateUserInfo = (req, res) => {
+module.exports.updateUserInfo = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -87,10 +103,16 @@ module.exports.updateUserInfo = (req, res) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => setError(res, err));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Введеный id не существует'));
+      } else {
+        next(new ServerError('Ошибка сервера'));
+      }
+    });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -106,5 +128,5 @@ module.exports.updateAvatar = (req, res) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => setError(res, err));
+    .catch(next);
 };
