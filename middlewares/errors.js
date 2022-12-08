@@ -7,7 +7,7 @@ class NotFound extends Error {
     super(message);
     this.name = 'NotFoundError';
   }
-}
+};
 
 const setError = (res, err) => {
   if (err.name === 'NotFoundError') {
@@ -20,5 +20,5 @@ const setError = (res, err) => {
 };
 
 module.exports = {
-  setError, NotFound,
+  setError, NotFound, UnauthorizedError
 };
