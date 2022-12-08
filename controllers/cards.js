@@ -23,7 +23,12 @@ module.exports.deleteCard = (req, res) => {
     .orFail(() => {
       throw new NotFound('Карта с данным ID не найдена');
     })
-    .then((card) => res.send({ card }))
+    .then((card) => {
+      if (card.owner.toString() !== req.user._id) {
+        res.send('У Вас недостаточно прав');
+      }
+      res.send({ card });
+    })
     .catch((err) => setError(res, err));
 };
 
