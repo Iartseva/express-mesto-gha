@@ -6,7 +6,7 @@ const {
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send(cards))
+    .then((cards) => res.send({ cards }))
     .catch(next);
 };
 
@@ -22,15 +22,16 @@ module.exports.createCard = (req, res, next) => {
 
 module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
-  Card.findByIdAndRemove(cardId)
-    .orFail(() => {
-      throw new NotFound('Карта с данным ID не найдена');
-    })
+  const owner = req.user._id;
+  Card.findOne({ cardId })
+    .orFail(new NotFound(`${cardId} не найдена!`))
     .then((card) => {
-      if (card.owner.toString() !== req.user._id) {
-        throw new ForbiddenError('У Вас недостаточно прав');
+      if (card.owner.toString() === owner) {
+        card.delete()
+          .then(() => res.status(200).send('Карта удалена'));
+      } else {
+        next(new ForbiddenError('Нельзя удалить чужую карточку'));
       }
-      res.send({ card });
     })
     .catch(next);
 };
@@ -41,9 +42,7 @@ module.exports.likeCard = (req, res, next) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .orFail(() => {
-      throw new NotFound('Карта с данным ID не найдена');
-    })
+    .orFail(new NotFound('Карта с данным ID не найдена'))
     .then((card) => res.send({ card }))
     .catch(next);
 };
@@ -54,9 +53,7 @@ module.exports.dislikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
-    .orFail(() => {
-      throw new NotFound('Карта с данным ID не найдена');
-    })
+    .orFail(new NotFound('Карта с данным ID не найдена'))
     .then((card) => res.send({ card }))
     .catch(next);
 };
