@@ -14,6 +14,7 @@ const regex = /(http)?s?:\/\/(www\.)?[-a-zA-Z0-9:%._+~#=]{1,256}\.[a-zA-Z0-9()]{
 
 const { PORT = 3000 } = process.env;
 const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
@@ -41,7 +42,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use('*', (req, res, next) => {
-  next(new NotFound('Запрашиваемой страницы не сушествует'));
+  next(new NotFound('Cтраницы не сушествует'));
 });
 
 app.use(errors());

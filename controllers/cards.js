@@ -20,7 +20,7 @@ module.exports.createCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        next(new ValidationError('Указаны некорректные данные.'));
+        next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);
       }
@@ -30,11 +30,11 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .orFail(() => {
-      throw new NotFound('Карточка с указанным id не найдена.');
+      throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
       if (card.owner.toString().indexOf(req.user._id) === -1) {
-        throw new ForbiddenError('Удаление карточки другого пользователя невозможно.');
+        throw new ForbiddenError('Нельзя удалять карту другого пользователя');
       } else {
         return card;
       }
@@ -65,7 +65,7 @@ module.exports.likeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound('Карточка с указанным id не найдена.');
+      throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
       res.send({
@@ -78,7 +78,7 @@ module.exports.likeCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        next(new ValidationError('Указаны некорректные данные.'));
+        next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);
       }
@@ -92,7 +92,7 @@ module.exports.dislikeCard = (req, res, next) => {
     { new: true },
   )
     .orFail(() => {
-      throw new NotFound('Карточка с указанным id не найдена.');
+      throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
       res.send({
@@ -105,7 +105,7 @@ module.exports.dislikeCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        next(new ValidationError('Указаны некорректные данные.'));
+        next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);
       }

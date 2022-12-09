@@ -1,9 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const {
-  UnauthorizedError,
-} = require('../errors/allErrors');
+const { UnauthorizedError } = require('../errors/allErrors');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -17,7 +15,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 2,
     maxlength: 30,
-    default: 'Исследователь океана',
+    default: 'Исследователь',
     required: false,
   },
   avatar: {
