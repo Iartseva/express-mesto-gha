@@ -1,17 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const { errors, celebrate, Joi } = require('celebrate');
-const { setErrors } = require('./middlewares/setErrors');
+const setErrors = require('./middlewares/setErrors');
 const auth = require('./middlewares/auth');
 const {
   createUser, login,
 } = require('./controllers/users');
 
-const { PORT = 3000 } = process.env;
-const app = express();
 const regex = /https?:\/{2}\b[^\\.][\w\-\\.]{1,}\.[a-z]{2,6}([\w\S]{1,})?/;
+const { PORT = 3000 } = process.env;
+
+const app = express();
+
+app.use(express.json());
+app.use(cookieParser());
 
 app.use(helmet());
 app.use(bodyParser.json());

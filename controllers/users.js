@@ -13,7 +13,9 @@ module.exports.getAllUsers = (req, res, next) => {
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
-    .orFail(new NotFound('Пользователь не найден!'))
+    .orFail(() => {
+      throw new NotFound('Пользователь не найден!');
+    })
     .then((user) => res.send({
       name: user.name,
       about: user.about,
@@ -64,7 +66,9 @@ module.exports.updateUserInfo = (req, res, next) => {
     { name, about },
     { new: true, runValidators: true },
   )
-    .orFail(new NotFound(`Пользователь с id: ${req.user._id} не найден!`))
+    .orFail(() => {
+      throw new NotFound('Пользователь не найден!');
+    })
     .then((user) => res.send({
       name: user.name,
       about: user.about,
@@ -81,7 +85,9 @@ module.exports.updateAvatar = (req, res, next) => {
     { avatar },
     { new: true, runValidators: true },
   )
-    .orFail(new NotFound(`Пользователь с id: ${req.user._id} не найден!`))
+    .orFail(() => {
+      throw new NotFound('Пользователь не найден!');
+    })
     .then((user) => res.send({
       name: user.name,
       about: user.about,
