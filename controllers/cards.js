@@ -28,17 +28,26 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  const { cardId } = req.params;
-  const owner = req.user._id;
-  Card.findOne({ cardId })
-    .orFail(new NotFound(`${cardId} не найдена!`))
+  Card.findById(req.params.cardId)
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
     .then((card) => {
-      if (card.owner.toString() === owner) {
-        card.delete()
-          .then(() => res.status(200).send('Карта удалена'));
+      if (card.owner.toString().indexOf(req.user._id) === -1) {
+        throw new ForbiddenError('Удаление карточки другого пользователя невозможно.');
       } else {
-        next(new ForbiddenError('Нельзя удалить чужую карточку'));
+        return card;
       }
+    })
+    .then(() => {
+      Card.findByIdAndDelete(req.params.cardId)
+        .then((deletedCard) => res.send({
+          likes: deletedCard.likes,
+          _id: deletedCard._id,
+          name: deletedCard.name,
+          link: deletedCard.link,
+          owner: deletedCard.owner,
+        }));
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -55,8 +64,18 @@ module.exports.likeCard = (req, res, next) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
-    .orFail(new NotFound('Карта с данным ID не найдена'))
-    .then((card) => res.send({ card }))
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
+    .then((card) => {
+      res.send({
+        likes: card.likes,
+        _id: card._id,
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+      });
+    })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
         next(new ValidationError('Указаны некорректные данные.'));
@@ -72,8 +91,18 @@ module.exports.dislikeCard = (req, res, next) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
-    .orFail(new NotFound('Карта с данным ID не найдена'))
-    .then((card) => res.send({ card }))
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
+    .then((card) => {
+      res.send({
+        likes: card.likes,
+        _id: card._id,
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+      });
+    })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
         next(new ValidationError('Указаны некорректные данные.'));
