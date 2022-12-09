@@ -7,7 +7,7 @@ const setErrors = (err, req, res, next) => {
 
   if (err.name === 'ValidationError' || err.name === 'CastError') {
     res.status(400).send({ message: `Ошибка валидации данных! ${message}` });
-  } else if (err.name === 'NotFoundError') {
+  } else if (err.name === 'notFoundError') {
     next(new NotFound('Не найдено'));
   } else if (err.code === 11000) {
     res
@@ -24,4 +24,4 @@ const setErrors = (err, req, res, next) => {
   next();
 };
 
-module.exports = { setErrors, NotFound };
+module.exports = { setErrors };

@@ -31,7 +31,7 @@ app.post('/signin', celebrate({
     password: Joi.string().required(),
   }).unknown(true),
 }), login);
-//app.use(auth);
+app.use(auth);
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
