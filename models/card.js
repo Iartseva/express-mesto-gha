@@ -1,22 +1,24 @@
 const mongoose = require('mongoose');
-const REGEX_FOR_LINK = require('../constants/regexp');
+const { regexp } = require('../utils/constants');
+
+const urlRegexp = regexp.urlReg;
 
 const cardSchema = new mongoose.Schema({
   name: {
     type: String,
-    minLength: 2,
-    maxLength: 30,
     required: true,
+    minlength: 2,
+    maxlength: 30,
   },
   link: {
     type: String,
-    required: true,
     validate: {
-      validator(link) {
-        return REGEX_FOR_LINK.test(link);
+      validator(url) {
+        return urlRegexp.test(url);
       },
-      message: 'Некорректная ссылка.',
+      message: (props) => `${props.value} is not a valid url! (Check on schema level)`,
     },
+    required: true,
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +34,6 @@ const cardSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-}, { versionKey: false });
+});
 
 module.exports = mongoose.model('card', cardSchema);
