@@ -23,7 +23,7 @@ router.post('/signin', celebrate({
   }),
 }), login);
 
-//router.use(auth);
+router.use(auth);
 router.use('/users', userRouter);
 router.use('/cards', cardRouter);
 router.use('*', require('./not-found'));
