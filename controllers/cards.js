@@ -1,61 +1,113 @@
-const ForbiddenError = require('../errors/ForbiddenError');
-const NotFoundError = require('../errors/NotFoundError');
 const Card = require('../models/card');
-const { messages } = require('../utils/constants');
+const {
+  ValidationError,
+  NotFound,
+  ForbiddenError,
+} = require('../errors/allErrors');
 
-const getCards = (req, res, next) => {
-  Card.find({}).populate(['owner', 'likes'])
+module.exports.getAllCards = (req, res, next) => {
+  Card.find({})
     .then((cards) => res.send({ cards }))
     .catch(next);
 };
 
-const postCard = (req, res, next) => {
+module.exports.createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
-
   Card.create({ name, link, owner })
-    .then((card) => res.send({ card }))
-    .catch(next);
+    .then((card) => {
+      res.send({ card });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Указаны некорректные данные.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
-const deleteCard = (req, res, next) => {
-  const ownerId = req.user._id;
-  const { cardId } = req.params;
-
-  Card.findOne({ cardId })
-    .orFail(new NotFoundError(`Карточка с id: ${cardId} не найдена!`))
+module.exports.deleteCard = (req, res, next) => {
+  Card.findById(req.params.cardId)
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
     .then((card) => {
-      if (card.owner.toString() === ownerId) {
-        card.delete()
-          .then(() => res.status(200).send({ message: messages.cardDeleted }));
+      if (card.owner.toString().indexOf(req.user._id) === -1) {
+        throw new ForbiddenError('Удаление карточки другого пользователя невозможно.');
       } else {
-        next(new ForbiddenError('Нельзя удалить чужую карточку'));
+        return card;
       }
     })
-    .catch(next);
+    .then(() => {
+      Card.findByIdAndDelete(req.params.cardId)
+        .then((deletedCard) => res.send({
+          likes: deletedCard.likes,
+          _id: deletedCard._id,
+          name: deletedCard.name,
+          link: deletedCard.link,
+          owner: deletedCard.owner,
+        }));
+    })
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new ValidationError('Указаны некорректные данные'));
+      } else {
+        next(err);
+      }
+    });
 };
 
-const commonActionDecorator = (action) => (req, res, next) => {
-  const userId = req.user._id;
-  const { cardId } = req.params;
-
+module.exports.likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
-    cardId,
-    { [action]: { likes: userId } },
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
-  ).populate(['owner', 'likes'])
-    .orFail(new NotFoundError(`Карточка с id: ${cardId} не найдена!`))
-    .then((card) => res.send({ card }))
-    .catch(next);
+  )
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
+    .then((card) => {
+      res.send({
+        likes: card.likes,
+        _id: card._id,
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new ValidationError('Указаны некорректные данные.'));
+      } else {
+        next(err);
+      }
+    });
 };
 
-const likeCard = commonActionDecorator('$addToSet');
-const dislikeCard = commonActionDecorator('$pull');
-
-module.exports = {
-  getCards,
-  postCard,
-  deleteCard,
-  likeCard,
-  dislikeCard,
+module.exports.dislikeCard = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } }, // убрать _id из массива
+    { new: true },
+  )
+    .orFail(() => {
+      throw new NotFound('Карточка с указанным id не найдена.');
+    })
+    .then((card) => {
+      res.send({
+        likes: card.likes,
+        _id: card._id,
+        name: card.name,
+        link: card.link,
+        owner: card.owner,
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
+        next(new ValidationError('Указаны некорректные данные.'));
+      } else {
+        next(err);
+      }
+    });
 };

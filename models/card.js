@@ -1,7 +1,4 @@
 const mongoose = require('mongoose');
-const { regexp } = require('../utils/constants');
-
-const urlRegexp = regexp.urlReg;
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,12 +9,6 @@ const cardSchema = new mongoose.Schema({
   },
   link: {
     type: String,
-    validate: {
-      validator(url) {
-        return urlRegexp.test(url);
-      },
-      message: (props) => `${props.value} is not a valid url! (Check on schema level)`,
-    },
     required: true,
   },
   owner: {

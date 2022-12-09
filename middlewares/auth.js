@@ -1,26 +1,25 @@
 const jwt = require('jsonwebtoken');
-const NotAuth = require('../errors/NotAuth');
-
-const { MYSECRETKEY = 'asdasdasdfg212fdcd' } = process.env;
+const UnauthorizedError = require('../errors/allErrors');
 
 module.exports = (req, res, next) => {
-  const token = req.cookies.jwt;
+  const { authorization } = req.headers;
+  const token = authorization.replace('Bearer ', '');
 
-  if (!token) {
-    next(new NotAuth('Необходима авторизация - Нет токена'));
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    next(new UnauthorizedError('Необходима авторизация'));
     return;
   }
 
   let payload;
 
   try {
-    payload = jwt.verify(token, MYSECRETKEY);
-  } catch (error) {
-    next(new NotAuth('Необходима авторизация - Токен не верифицирован'));
+    // попытаемся верифицировать токен
+    payload = jwt.verify(token, 'some-secret-key');
+  } catch (err) {
+    next(new UnauthorizedError('Необходима авторизация'));
     return;
   }
 
-  req.user = payload;
-
-  next();
+  req.user = payload; // записываем пейлоуд в объект запроса
+  next(); // пропускаем запрос дальше
 };
