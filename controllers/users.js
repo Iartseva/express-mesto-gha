@@ -1,13 +1,14 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const {
+const { NotFound } = require('../middlewares/setErrors');
+/* const {
   EmailError,
   NotFound,
   UnauthorizedError,
   ValidationError,
   ServerError,
-} = require('../errors/allErrors');
+} = require('../errors/allErrors'); */
 
 module.exports.getAllUsers = (req, res, next) => {
   User.find({})
@@ -26,13 +27,7 @@ module.exports.getUserById = (req, res, next) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new ValidationError('Введеный id не существует'));
-      } else {
-        next(new ServerError('Ошибка сервера'));
-      }
-    });
+    .catch(next);
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -45,21 +40,13 @@ module.exports.createUser = (req, res, next) => {
       name, about, avatar, email, password: hash,
     }), { new: true, runValidators: true })
     .then((user) => res.send({
+      email: user.email,
       name: user.name,
       about: user.about,
       avatar: user.avatar,
       _id: user._id,
-      email: user.email,
     }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new ValidationError('Введены неверные данные'));
-      } else if (err.code && err.code === 11000) {
-        next(new EmailError('Пользователь с таким e-mail уже зарегистрирован'));
-      } else {
-        next(new ServerError('Ошибка сервера'));
-      }
-    });
+    .catch(next);
 };
 
 module.exports.login = (req, res, next) => {
@@ -70,7 +57,7 @@ module.exports.login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch(next(new UnauthorizedError('Введен неверный пароль или e-mail')));
+    .catch(next);
 };
 
 module.exports.getUserInfo = (req, res, next) => {
@@ -103,13 +90,7 @@ module.exports.updateUserInfo = (req, res, next) => {
       avatar: user.avatar,
       _id: user._id,
     }))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new ValidationError('Введеный id не существует'));
-      } else {
-        next(new ServerError('Ошибка сервера'));
-      }
-    });
+    .catch(next);
 };
 
 module.exports.updateAvatar = (req, res, next) => {
