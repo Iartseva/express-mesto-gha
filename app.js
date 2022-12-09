@@ -8,7 +8,7 @@ const { errors, celebrate, Joi } = require('celebrate');
 const auth = require('./middlewares/auth');
 const setErrors = require('./middlewares/setErrors');
 const { createUser, login } = require('./controllers/users');
-const NotFound = require('./errors/NotFound');
+const { NotFound } = require('./errors/NotFound');
 
 const regexURL = /https?:\/{2}\b[^\\.][\w\-\\.]{1,}\.[a-z]{2,6}([\w\S]{1,})?/;
 
