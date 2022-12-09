@@ -15,7 +15,7 @@ module.exports = (req, res, next) => {
       req.user = payload;
       next();
     } catch (err) {
-      next(new UnauthorizedError(err.message));
+      next(new UnauthorizedError('Вы не авторизованы'));
     }
   }
 };

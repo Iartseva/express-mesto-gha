@@ -10,7 +10,7 @@ const setErrors = require('./middlewares/setErrors');
 const { createUser, login } = require('./controllers/users');
 const { NotFound } = require('./errors/NotFound');
 
-const regexURL = /https?:\/{2}\b[^\\.][\w\-\\.]{1,}\.[a-z]{2,6}([\w\S]{1,})?/;
+const regex = /(http)?s?:\/\/(www\.)?[-a-zA-Z0-9:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+\-[\].$'*,;!~#?&//=]*)/;
 
 const { PORT = 3000 } = process.env;
 const app = express();
@@ -33,7 +33,7 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(regexURL),
+    avatar: Joi.string().regex(regex),
   }),
 }), createUser);
 app.use(auth);
