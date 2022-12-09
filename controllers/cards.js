@@ -1,7 +1,7 @@
 const Card = require('../models/card');
-const { NotFound } = require('../middlewares/setErrors');
 const {
   ForbiddenError,
+  NotFound,
 } = require('../errors/allErrors');
 
 module.exports.getAllCards = (req, res, next) => {
