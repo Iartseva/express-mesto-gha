@@ -6,7 +6,7 @@ const {
 } = require('../errors/allErrors');
 
 module.exports.getAllCards = (req, res, next) => {
-  Card.find({})
+  Card.find({}).populate(['likes', 'owner'])
     .then((cards) => res.send({ cards }))
     .catch(next);
 };
@@ -16,7 +16,7 @@ module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
   Card.create({ name, link, owner })
     .then((card) => {
-      res.send({ card });
+      res.status(201).send({ card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -33,21 +33,11 @@ module.exports.deleteCard = (req, res, next) => {
       throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
-      if (card.owner.toString().indexOf(req.user._id) === -1) {
+      if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Нельзя удалять карту другого пользователя');
-      } else {
-        return card;
       }
-    })
-    .then(() => {
-      Card.findByIdAndDelete(req.params.cardId)
-        .then((deletedCard) => res.send({
-          likes: deletedCard.likes,
-          _id: deletedCard._id,
-          name: deletedCard.name,
-          link: deletedCard.link,
-          owner: deletedCard.owner,
-        }));
+      res.send({ card });
+      card.remove();
     })
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
@@ -68,16 +58,10 @@ module.exports.likeCard = (req, res, next) => {
       throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
-      res.send({
-        likes: card.likes,
-        _id: card._id,
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-      });
+      res.send({ card });
     })
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);
@@ -95,16 +79,10 @@ module.exports.dislikeCard = (req, res, next) => {
       throw new NotFound('Карточка с указанным id не найдена');
     })
     .then((card) => {
-      res.send({
-        likes: card.likes,
-        _id: card._id,
-        name: card.name,
-        link: card.link,
-        owner: card.owner,
-      });
+      res.send({ card });
     })
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);
