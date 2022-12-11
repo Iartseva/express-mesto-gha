@@ -1,5 +1,5 @@
 const { celebrate, Joi } = require('celebrate');
-const regex = require('./constants');
+const { regex } = require('./constants');
 
 const validationGetUserById = celebrate({
   params: Joi.object().keys({

@@ -4,6 +4,7 @@ const {
   NotFound,
   ForbiddenError,
 } = require('../errors/allErrors');
+const { resStatusCreate } = require('../utils/constants');
 
 module.exports.getAllCards = (req, res, next) => {
   Card.find({}).populate(['likes', 'owner'])
@@ -16,7 +17,7 @@ module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
   Card.create({ name, link, owner })
     .then((card) => {
-      res.status(201).send({ card });
+      res.status(resStatusCreate).send({ card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -36,11 +37,12 @@ module.exports.deleteCard = (req, res, next) => {
       if (card.owner.toString() !== req.user._id) {
         throw new ForbiddenError('Нельзя удалять карту другого пользователя');
       }
-      res.send({ card });
-      card.remove();
+      card.remove()
+        .then(() => res.send({ card }))
+        .catch(next);
     })
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Указаны некорректные данные'));
       } else {
         next(err);

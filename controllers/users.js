@@ -5,6 +5,7 @@ const {
   NotFound,
   ValidationError,
 } = require('../errors/allErrors');
+const { resStatusConflict, resStatusCreate } = require('../utils/constants');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -12,7 +13,13 @@ function findUser(res, next, userId) {
   User.findById(userId)
     .orFail(new NotFound('Пользователь не найден'))
     .then((user) => res.send({ user }))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Передан невалидный ID'));
+      } else {
+        next(err);
+      }
+    });
 }
 
 module.exports.getAllUsers = (req, res, next) => {
@@ -38,7 +45,7 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((user) => res.status(201).send({
+    .then((user) => res.status(resStatusCreate).send({
       email: user.email,
       name: user.name,
       about: user.about,
@@ -46,10 +53,10 @@ module.exports.createUser = (req, res, next) => {
       _id: user._id,
     }))
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         next(new ValidationError('Указаны некорректные данные'));
       } else if (err.code === 11000) {
-        res.status(409).send({ message: `${err.message}` });
+        res.status(resStatusConflict).send({ message: `${err.message}` });
       } else {
         next(err);
       }
