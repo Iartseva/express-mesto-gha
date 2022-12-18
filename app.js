@@ -17,7 +17,7 @@ app.use(helmet());
 
 app.use(requestLogger); // до всех роутов
 app.use(router);
-app.use(requestLogger); // после роутов, но до ошибок
+app.use(errorLogger); // после роутов, но до ошибок
 app.use(errors());
 app.use(setErrors);
 
